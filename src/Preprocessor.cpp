@@ -71,6 +71,7 @@ bool Preprocessor::LoadStudent() {
         student.capacity = t;
 
         finStudent >> student.classroom;
+        finStudent >> t; // skip unknown
         students.push_back(student);
     }
     return true;
