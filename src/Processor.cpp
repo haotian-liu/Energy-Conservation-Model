@@ -16,7 +16,7 @@ void Processor::init(const std::string &processFileName) {
 
 void Processor::GenList() {
     cue.items.clear(); // reset
-    cue.studentCount = 200; // set all students
+    cue.studentCount = 1000; // set all students
 
     /****************** ALL valid options ******************/
     const std::vector<char> _ALL_buildings = {'A', 'B', 'C'};
@@ -24,8 +24,8 @@ void Processor::GenList() {
     const std::vector<int> _ALL_types = {0, 1, 2};
     /****************** ALL valid options ******************/
 
-    std::vector<char> buildings = {'A', 'C'};
-    std::vector<int> storeys = {0, 1, 2};
+    std::vector<char> buildings = {'A', 'B', 'C'};
+    std::vector<int> storeys = {-1, 0, 1, 2, 3, 4};
     std::vector<int> types = {0};
     for (const char & building : buildings) {
         for (const int & storey : storeys) {
@@ -76,7 +76,7 @@ bool Processor::rake() {
         PreProcess(students);
 
         std::vector<Classroom*> classrooms;
-        PreProcess(classrooms, CueItems);
+        freeCapacity = PreProcess(classrooms, CueItems);
 
         Process(students, classrooms);
 
@@ -96,13 +96,14 @@ void Processor::GenCues(std::vector<const CueItem *> &GenItems, int k) const {
 }
 
 void Processor::PreProcess(std::vector<Student> &students) {
-    auto shuffled = fp->getStudents();
+    const auto &studentsRef = fp->getStudents();
     auto engine = std::default_random_engine{};
 
     // map the students to desired numbers.
-    std::shuffle(std::begin(shuffled), std::end(shuffled), engine);
     if (cue.studentCount > students.size()) {
-        students.insert(students.end(), shuffled.begin(), shuffled.begin() + cue.studentCount - students.size());
+        while (cue.studentCount >= students.size() + studentsRef.size())
+            students.insert(students.end(), studentsRef.begin(), studentsRef.end());
+        students.insert(students.end(), studentsRef.begin(), studentsRef.begin() + cue.studentCount - students.size());
     }
 
     // shuffle the student list
@@ -132,15 +133,13 @@ int Processor::PreProcess(std::vector<Classroom *> &classrooms, const std::vecto
 }
 
 void Processor::Process(std::vector<Student> &students, std::vector<Classroom *> &classrooms) {
-    Student student;
     Classroom classroom;
 
     double satisfactory, bestSF;
     int bestClassroom;
     int probability;
 
-    for (int i = 0; i < students.size(); i++) {
-        student = students[i];
+    for (auto &student : students) {
         bestSF = 0;
         bestClassroom = -1;
         for (int j = 0; j < classrooms.size(); j++) {
@@ -167,6 +166,9 @@ void Processor::Process(std::vector<Student> &students, std::vector<Classroom *>
                     break;
             }
 
+            // prune
+            if (satisfactory < bestSF) { continue; }
+
             // check plug
             switch (student.plug) {
                 case 1:
@@ -182,10 +184,16 @@ void Processor::Process(std::vector<Student> &students, std::vector<Classroom *>
                     break;
             }
 
+            // prune
+            if (satisfactory < bestSF) { continue; }
+
             // check capacity
             if (classroom.currentC > student.capacity) {
                 satisfactory *= pow(0.8, student.stuEffect * getMax(0, classroom.currentC - student.capacity));
             }
+
+            // prune
+            if (satisfactory < bestSF) { continue; }
 
             // check part of the classroom
             switch (classroom.part) {
@@ -215,12 +223,12 @@ void Processor::Process(std::vector<Student> &students, std::vector<Classroom *>
             if (student.plug <= 3 && student.plug >= 1 && classroom.currentP < classroom.plug) {
                 probability = rand() % 3 + 1;
                 if (student.plug > probability) {
-                    students[i].isPlugged = true;
-                    classrooms[bestClassroom]->currentP++;
+                    student.isPlugged = true;
+                    classroom.currentP++;
                 }
             }
-            students[i].satisfactory = bestSF;
-            students[i].inClassroom = classroom.id;
+            student.satisfactory = bestSF;
+            student.inClassroom = classroom.id;
             classrooms[bestClassroom]->currentC++;
             SFTotal += bestSF;
             foundCnt++;
@@ -244,17 +252,20 @@ void Processor::Analyze(std::vector<Student> &students) {
     stdDeviation /= students.size();
     stdDeviation = sqrt(stdDeviation);
 
-    sampler.emplace_back(SFTotal, average);
+    sampler.emplace_back(SFTotal, average, SFTotal / freeCapacity);
 }
 
-bool Processor::output(const std::string &outputFileName) const {
+bool Processor::output(const std::string &outputFileName) {
     std::ofstream fout(outputFileName);
     if (fout.fail()) {
         std::cerr << "Fail to open student data file." << std::endl;
         return false;
     }
+
+    auto engine = std::default_random_engine{};
+    std::shuffle(std::begin(sampler), std::end(sampler), engine);
     for (const auto &s : sampler) {
-        fout << s.SFTotal << " " << s.average << std::endl;
+        fout << s.SFTotal << " " << s.average << " " << s.value << std::endl;
     }
     return true;
 }

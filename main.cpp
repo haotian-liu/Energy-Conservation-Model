@@ -8,7 +8,7 @@ int main() {
     const std::string processFile = "resources/process.out";
     const std::string resultFile = "resources/result.out";
 
-    srand((unsigned int) time(NULL));
+    std::srand(std::time(0));
 
     auto *fp = new Preprocessor;
     fp->Init(classFile, studentFile);

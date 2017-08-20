@@ -11,11 +11,13 @@
 
 struct AnalyzerResult {
     AnalyzerResult() = default;
-    explicit AnalyzerResult(double SFTotal, double average) : SFTotal(SFTotal), average(average) {};
+    explicit AnalyzerResult(double SFTotal, double average, double value) : SFTotal(SFTotal), average(average), value(value) {};
     double SFTotal;
     int foundCnt;
     int notFoundCnt;
+    int freeCapacity;
     double average;
+    double value;
 };
 
 class Processor {
@@ -23,7 +25,7 @@ public:
     explicit Processor(Preprocessor *fp) : fp(fp) {};
     void init(const std::string &processFileName);
     bool rake();
-    bool output(const std::string &outputFileName) const;
+    bool output(const std::string &outputFileName);
 private:
     void GenList();
     bool Save(const std::string& processFileName) const;
@@ -39,6 +41,7 @@ private:
     double SFTotal;
     int foundCnt;
     int notFoundCnt;
+    int freeCapacity;
     double average;
 };
 
