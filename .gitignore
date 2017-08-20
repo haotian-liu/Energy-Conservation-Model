@@ -1,3 +1,6 @@
+# ---> PROJECT
+resources/*
+
 # ---> Clion
 */cmake-build-*
 */.idea/*
