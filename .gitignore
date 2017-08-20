@@ -1,5 +1,6 @@
 # ---> PROJECT
 resources/*
+EnergyConservationModel
 
 # ---> Clion
 */cmake-build-*
