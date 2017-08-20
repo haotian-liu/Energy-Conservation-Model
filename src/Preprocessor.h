@@ -5,7 +5,6 @@
 #ifndef ENERGYCONSERVATIONMODEL_PREPROCESSOR_H
 #define ENERGYCONSERVATIONMODEL_PREPROCESSOR_H
 
-#include <iostream>
 #include <fstream>
 #include <vector>
 #include "Base.h"
@@ -18,6 +17,8 @@ public:
     ~Preprocessor() = default;
     bool Init(const std::string &classFileName, const std::string &studentFileName);
     bool Load();
+    const std::vector<Student>& getStudents() const { return students; }
+    std::vector<Classroom>& getClassroom() { return classrooms; }
 private:
     bool LoadStudent();
     bool LoadClassroom();

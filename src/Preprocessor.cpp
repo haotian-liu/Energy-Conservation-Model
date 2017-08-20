@@ -3,6 +3,7 @@
 //
 
 #include "Preprocessor.h"
+#include <iostream>
 
 bool Preprocessor::Init(const std::string &classFileName, const std::string &studentFileName) {
     finClass.open(classFileName);

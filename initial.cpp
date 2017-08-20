@@ -137,7 +137,7 @@ void readData() {
 }
 
 void preProcess() {
-    ifstream fin("/Users/haotian/Desktop/PJ/process.in");
+    ifstream fin("/Users/haotian/Desktop/PJ/process.out");
     vector<Student> shuffled = students;
     int randAdd;
     auto engine = std::default_random_engine{};
@@ -340,7 +340,7 @@ void make() {
     int size = reqList.size();
     long long shifts = (long long)1 << size;
     ofstream td;
-    ifstream fin("/Users/haotian/Desktop/PJ/process.in");
+    ifstream fin("/Users/haotian/Desktop/PJ/process.out");
     int randAdd;
 
     vector<struct Res> bests;
@@ -368,7 +368,7 @@ void make() {
         fa = fb = fc = false;
         record.clear();
 
-        td.open("/Users/haotian/Desktop/PJ/process.in");
+        td.open("/Users/haotian/Desktop/PJ/process.out");
         td << randAdd << endl;
         while (t > 0) {
             if (t % 2) {
