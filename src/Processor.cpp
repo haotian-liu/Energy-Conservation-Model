@@ -2,12 +2,18 @@
 // Created by Haotian on 2017/8/20.
 //
 
-#include "Processor.h"
 #include <iostream>
 #include <fstream>
 #include <utility>
 #include <algorithm>
+#include <map>
 #include <random>
+#include "Processor.h"
+#include "AnalyzeTechnique.h"
+
+#include <chrono>
+
+using namespace std::chrono;
 
 void Processor::init(const std::string &processFileName) {
     GenList();
@@ -25,7 +31,7 @@ void Processor::GenList() {
     /****************** ALL valid options ******************/
 
     std::vector<char> buildings = {'A', 'B', 'C'};
-    std::vector<int> storeys = {-1, 0, 1, 2, 3, 4};
+    std::vector<int> storeys = {0, 1, 2, 3, 4};
     std::vector<int> types = {0};
     for (const char & building : buildings) {
         for (const int & storey : storeys) {
@@ -97,7 +103,7 @@ void Processor::GenCues(std::vector<const CueItem *> &GenItems, int k) const {
 
 void Processor::PreProcess(std::vector<Student> &students) {
     const auto &studentsRef = fp->getStudents();
-    auto engine = std::default_random_engine{};
+    static std::default_random_engine engine(time(0));
 
     // map the students to desired numbers.
     if (cue.studentCount > students.size()) {
@@ -133,103 +139,50 @@ int Processor::PreProcess(std::vector<Classroom *> &classrooms, const std::vecto
 }
 
 void Processor::Process(std::vector<Student> &students, std::vector<Classroom *> &classrooms) {
-    Classroom classroom;
+    static std::map<std::string, double (*)(const Student &, const Classroom &)> TechniqueMap = {
+            {"CheckCapacity", AnalyzeTechnique::CheckCapacity},
+            {"CheckPart", AnalyzeTechnique::CheckPart},
+            {"CheckPlug", AnalyzeTechnique::CheckPlug},
+            {"CheckStorey", AnalyzeTechnique::CheckStorey},
+    };
 
-    double satisfactory, bestSF;
-    int bestClassroom;
+    Classroom *bestClassroom;
+
+    double currentSF, bestSF;
     int probability;
 
     for (auto &student : students) {
         bestSF = 0;
-        bestClassroom = -1;
-        for (int j = 0; j < classrooms.size(); j++) {
-            int stuPart;
+        bestClassroom = nullptr;
+        for (auto &classroom : classrooms) {
+            currentSF = 1;
 
-            satisfactory = 1;
-            classroom = *classrooms[j];
+            if (classroom->capacity <= classroom->currentC) { continue; }
 
-            if (classroom.capacity <= classroom.currentC)
-                continue;
-
-            // check storage
-            switch (student.storey) {
-                case 1:
-                    satisfactory *= 0.6 + classroom.storey / 10.0;
-                    break;
-                case 2:
-                    satisfactory *= 1.0 - classroom.storey / 10.0;
-                    break;
-                case 3:
-                    satisfactory *= 1.0 - (classroom.storey - 2) * (classroom.storey - 2) * 0.1;
-                    break;
-                default:
-                    break;
+            for (const auto &Technique : TechniqueMap) {
+                currentSF *= Technique.second(student, *classroom);
+                if (currentSF < bestSF) { break; }
             }
-
-            // prune
-            if (satisfactory < bestSF) { continue; }
-
-            // check plug
-            switch (student.plug) {
-                case 1:
-                    if (classroom.plug == 0) satisfactory = 0;
-                    break;
-                case 2:
-                    if (classroom.plug == 0) satisfactory *= 0.6;
-                    break;
-                case 3:
-                    if (classroom.plug == 0) satisfactory *= 0.8;
-                    break;
-                default:
-                    break;
-            }
-
-            // prune
-            if (satisfactory < bestSF) { continue; }
-
-            // check capacity
-            if (classroom.currentC > student.capacity) {
-                satisfactory *= pow(0.8, student.stuEffect * getMax(0, classroom.currentC - student.capacity));
-            }
-
-            // prune
-            if (satisfactory < bestSF) { continue; }
-
-            // check part of the classroom
-            switch (classroom.part) {
-                case 1:
-                    stuPart = student.preferB;
-                    break;
-                case 2:
-                    stuPart = student.preferC;
-                    break;
-                default:
-                    stuPart = student.preferA;
-                    break;
-            }
-
-            satisfactory *= 0.6 + (3 - stuPart) * 0.2;
 
             // update best
-            if (satisfactory > bestSF) {
-                bestClassroom = j;
-                bestSF = satisfactory;
+            if (currentSF > bestSF) {
+                bestClassroom = classroom;
+                bestSF = currentSF;
             }
         }
 
         // check if best found and manipulate data.
-        if (bestClassroom != -1) {
-            classroom = *classrooms[bestClassroom];
-            if (student.plug <= 3 && student.plug >= 1 && classroom.currentP < classroom.plug) {
-                probability = rand() % 3 + 1;
+        if (bestClassroom != nullptr) {
+            if (student.plug <= 3 && student.plug >= 1 && bestClassroom->currentP < bestClassroom->plug) {
+                probability = std::rand() % 3 + 1;
                 if (student.plug > probability) {
                     student.isPlugged = true;
-                    classroom.currentP++;
+                    bestClassroom->currentP++;
                 }
             }
             student.satisfactory = bestSF;
-            student.inClassroom = classroom.id;
-            classrooms[bestClassroom]->currentC++;
+            student.inClassroom = bestClassroom->id;
+            bestClassroom->currentC++;
             SFTotal += bestSF;
             foundCnt++;
         } else {
@@ -262,8 +215,8 @@ bool Processor::output(const std::string &outputFileName) {
         return false;
     }
 
-    auto engine = std::default_random_engine{};
-    std::shuffle(std::begin(sampler), std::end(sampler), engine);
+//    auto engine = std::default_random_engine{};
+//    std::shuffle(std::begin(sampler), std::end(sampler), engine);
     for (const auto &s : sampler) {
         fout << s.SFTotal << " " << s.average << " " << s.value << std::endl;
     }
