@@ -11,10 +11,6 @@
 #include "Processor.h"
 #include "AnalyzeTechnique.h"
 
-#include <chrono>
-
-using namespace std::chrono;
-
 void Processor::init(const std::string &processFileName) {
     GenList();
     Save(processFileName);
@@ -33,6 +29,7 @@ void Processor::GenList() {
     std::vector<char> buildings = {'A', 'B', 'C'};
     std::vector<int> storeys = {0, 1, 2, 3, 4};
     std::vector<int> types = {0};
+    // type (0,1,2) => (any, small, large)
     for (const char & building : buildings) {
         for (const int & storey : storeys) {
             if (building == 'B' && storey == 0) { continue; }
@@ -86,7 +83,7 @@ bool Processor::rake() {
 
         Process(students, classrooms);
 
-        Analyze(students);
+        Analyze(students, i);
     }
     return true;
 }
@@ -189,7 +186,7 @@ void Processor::Process(std::vector<Student> &students, std::vector<Classroom *>
     }
 }
 
-void Processor::Analyze(std::vector<Student> &students) {
+void Processor::Analyze(std::vector<Student> &students, int k) {
     Student student;
     Classroom classroom;
 
@@ -203,7 +200,7 @@ void Processor::Analyze(std::vector<Student> &students) {
     stdDeviation /= students.size();
     stdDeviation = sqrt(stdDeviation);
 
-    sampler.emplace_back(SFTotal, emission, SFTotal / emission);
+    sampler.emplace_back(k, SFTotal, emission, SFTotal / emission);
 }
 
 bool Processor::output(const std::string &outputFileName, const Config &config) {
@@ -215,7 +212,7 @@ bool Processor::output(const std::string &outputFileName, const Config &config) 
 
     for (const auto &s : sampler) {
         if (s.emission > config.MaxEmission) { continue; }
-        fout << s.SFTotal << " " << s.emission << " " << s.value << std::endl;
+        fout << s.k << " " << s.SFTotal << " " << s.emission << " " << s.value << std::endl;
     }
     return true;
 }

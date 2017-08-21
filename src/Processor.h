@@ -11,8 +11,9 @@
 
 struct AnalyzerResult {
     AnalyzerResult() = default;
-    explicit AnalyzerResult(double SFTotal, double emission, double value) : SFTotal(SFTotal), emission(emission), value(value) {};
+    explicit AnalyzerResult(int k, double SFTotal, double emission, double value) : k(k), SFTotal(SFTotal), emission(emission), value(value) {};
     double SFTotal;
+    int k;
     int foundCnt;
     int notFoundCnt;
     double emission;
@@ -32,7 +33,7 @@ private:
     double PreProcess(std::vector<Classroom *> &classrooms, const std::vector<const CueItem *> &item);
     void GenCues(std::vector<const CueItem *> &GenItems, int k) const;
     void Process(std::vector<Student> &students, std::vector<Classroom *> &classrooms);
-    void Analyze(std::vector<Student> &students);
+    void Analyze(std::vector<Student> &students, int k);
     CueList CueListSampler;
     Preprocessor *fp;
     std::vector<struct Result> bestResults;
