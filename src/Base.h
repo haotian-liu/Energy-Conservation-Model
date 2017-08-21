@@ -11,6 +11,11 @@
 #include <vector>
 
 struct Student {
+    void fixPrefer() {
+        if (preferA == -2) { preferA = 3; }
+        if (preferB == -2) { preferB = 3; }
+        if (preferC == -2) { preferC = 3; }
+    }
     int grade, gender;
     int storey, plug, capacity;
     int stuEffect;
@@ -25,13 +30,6 @@ struct Student {
 struct Config {
     Config() : MaxEmission(0) {};
     int MaxEmission;
-};
-
-struct Result {
-    int id;
-    double satisfactory;
-    int freeCapacity;
-    double val;
 };
 
 struct Classroom {

@@ -14,8 +14,6 @@ struct AnalyzerResult {
     explicit AnalyzerResult(int k, double SFTotal, double emission, double value) : k(k), SFTotal(SFTotal), emission(emission), value(value) {};
     double SFTotal;
     int k;
-    int foundCnt;
-    int notFoundCnt;
     double emission;
     double value;
 };
@@ -36,11 +34,8 @@ private:
     void Analyze(std::vector<Student> &students, int k);
     CueList CueListSampler;
     Preprocessor *fp;
-    std::vector<struct Result> bestResults;
     std::vector<AnalyzerResult> sampler;
     double SFTotal;
-    int foundCnt;
-    int notFoundCnt;
     double emission;
     double average;
 };

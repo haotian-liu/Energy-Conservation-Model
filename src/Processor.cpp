@@ -69,8 +69,6 @@ bool Processor::rake() {
     std::vector<const CueItem*> CueItems;
 
     for (int i = 0; i < shifts; i++) {
-        notFoundCnt = 0;
-        foundCnt = 0;
         SFTotal = 0;
         // generate cue items using binary digits
         GenCues(CueItems, i);
@@ -134,7 +132,7 @@ double Processor::PreProcess(std::vector<Classroom *> &classrooms, const std::ve
 }
 
 void Processor::Process(std::vector<Student> &students, std::vector<Classroom *> &classrooms) {
-    static std::map<std::string, double (*)(const Student &, const Classroom &)> TechniqueMap = {
+    static std::map<std::string, decltype(*&AnalyzeTechnique::CheckDummy)> TechniqueMap = {
             {"CheckCapacity", AnalyzeTechnique::CheckCapacity},
             {"CheckPart", AnalyzeTechnique::CheckPart},
             {"CheckPlug", AnalyzeTechnique::CheckPlug},
@@ -179,9 +177,6 @@ void Processor::Process(std::vector<Student> &students, std::vector<Classroom *>
             student.inClassroom = bestClassroom->id;
             bestClassroom->currentC++;
             SFTotal += bestSF;
-            foundCnt++;
-        } else {
-            notFoundCnt++;
         }
     }
 }
@@ -191,14 +186,6 @@ void Processor::Analyze(std::vector<Student> &students, int k) {
     Classroom classroom;
 
     average = SFTotal / students.size();
-    double stdDeviation = 0;
-
-    for (const auto &student : students) {
-        stdDeviation += pow(average - student.satisfactory, 2);
-    }
-
-    stdDeviation /= students.size();
-    stdDeviation = sqrt(stdDeviation);
 
     sampler.emplace_back(k, SFTotal, emission, SFTotal / emission);
 }

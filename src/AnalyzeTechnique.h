@@ -26,6 +26,7 @@ static const std::map<std::string, std::tuple<double, double, double>> EmissionL
 
 class AnalyzeTechnique {
 public:
+    static double CheckDummy(const Student &student, const Classroom &classroom) {};
     static double CheckStorey(const Student &student, const Classroom &classroom);
     static double CheckPlug(const Student &student, const Classroom &classroom);
     static double CheckCapacity(const Student &student, const Classroom &classroom);
