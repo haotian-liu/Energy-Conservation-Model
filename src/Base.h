@@ -22,6 +22,11 @@ struct Student {
     bool isPlugged;
 };
 
+struct Config {
+    Config() : MaxEmission(0) {};
+    int MaxEmission;
+};
+
 struct Result {
     int id;
     double satisfactory;
@@ -30,9 +35,16 @@ struct Result {
 };
 
 struct Classroom {
+    void initialize() {
+        part = id[0] - 'A';
+        storey = id[1] - '0';
+        currentC = currentP = 0;
+    }
     std::string id;
     int storey, plug, capacity, part;
     int currentC, currentP;
+    int walts;
+    double lightEmission, airEmission, combEmission;
 };
 
 struct CueItem {

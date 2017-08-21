@@ -11,12 +11,11 @@
 
 struct AnalyzerResult {
     AnalyzerResult() = default;
-    explicit AnalyzerResult(double SFTotal, double average, double value) : SFTotal(SFTotal), average(average), value(value) {};
+    explicit AnalyzerResult(double SFTotal, double emission, double value) : SFTotal(SFTotal), emission(emission), value(value) {};
     double SFTotal;
     int foundCnt;
     int notFoundCnt;
-    int freeCapacity;
-    double average;
+    double emission;
     double value;
 };
 
@@ -25,23 +24,23 @@ public:
     explicit Processor(Preprocessor *fp) : fp(fp) {};
     void init(const std::string &processFileName);
     bool rake();
-    bool output(const std::string &outputFileName);
+    bool output(const std::string &outputFileName, const Config &config);
 private:
     void GenList();
     bool Save(const std::string& processFileName) const;
     void PreProcess(std::vector<Student> &students);
-    int PreProcess(std::vector<Classroom *> &classrooms, const std::vector<const CueItem *> &item);
+    double PreProcess(std::vector<Classroom *> &classrooms, const std::vector<const CueItem *> &item);
     void GenCues(std::vector<const CueItem *> &GenItems, int k) const;
     void Process(std::vector<Student> &students, std::vector<Classroom *> &classrooms);
     void Analyze(std::vector<Student> &students);
-    CueList cue;
+    CueList CueListSampler;
     Preprocessor *fp;
     std::vector<struct Result> bestResults;
     std::vector<AnalyzerResult> sampler;
     double SFTotal;
     int foundCnt;
     int notFoundCnt;
-    int freeCapacity;
+    double emission;
     double average;
 };
 

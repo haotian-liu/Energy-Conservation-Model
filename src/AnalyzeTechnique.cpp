@@ -4,6 +4,7 @@
 
 #include "AnalyzeTechnique.h"
 #include <cmath>
+#include <iostream>
 
 double AnalyzeTechnique::CheckStorey(const Student &student, const Classroom &classroom) {
     switch (student.storey) {
@@ -56,4 +57,40 @@ double AnalyzeTechnique::CheckPart(const Student &student, const Classroom &clas
     }
 
     return (0.6 + (3 - stuPart) * 0.2);
+}
+
+double AnalyzeTechnique::CalculateEmission(const std::vector<Classroom *> &classrooms, const std::vector<const CueItem *> &CueList) {
+    double emission = 0;
+    int SecACnt = 0, SecAElev = 0, SecBCCnt = 0;
+    for (const auto item : CueList) {
+        switch (item->building) {
+            case 'A':
+                SecACnt++;
+                if (item->storey == 0) { emission += std::get<2>(EmissionList.find("A_Corridor_0")->second); }
+                else { emission += std::get<2>(EmissionList.find("A_Corridor")->second); }
+                if (item->storey == 4 || item->storey == 5) { SecAElev++; }
+                break;
+            case 'B':
+                SecBCCnt++;
+                emission += std::get<2>(EmissionList.find("B_Corridor")->second);
+                if (item->storey == 1) { emission += std::get<2>(EmissionList.find("B1")->second); }
+                break;
+            case 'C':
+                SecBCCnt++;
+                emission += std::get<2>(EmissionList.find("C_Corridor")->second);
+                if (item->storey == 1) { emission += std::get<2>(EmissionList.find("C1")->second); }
+                break;
+            default:
+                std::cerr << "Unknown storey id when calculating emission in AT." << std::endl;
+                break;
+        }
+    }
+    if (SecACnt == SecATotal) { emission += std::get<2>(EmissionList.find("A_AirCondition")->second); }
+    if (SecBCCnt == SecBCTotal) { emission += std::get<2>(EmissionList.find("BC_AirCondition")->second); }
+    if (SecAElev == SecAElevTotal) { emission += std::get<2>(EmissionList.find("A_Elevator")->second); }
+
+    for (const auto classroom : classrooms) {
+        emission += classroom->combEmission;
+    }
+    return emission;
 }

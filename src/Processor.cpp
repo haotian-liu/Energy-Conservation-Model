@@ -21,8 +21,8 @@ void Processor::init(const std::string &processFileName) {
 }
 
 void Processor::GenList() {
-    cue.items.clear(); // reset
-    cue.studentCount = 1000; // set all students
+    CueListSampler.items.clear(); // reset
+    CueListSampler.studentCount = 1000; // set all students
 
     /****************** ALL valid options ******************/
     const std::vector<char> _ALL_buildings = {'A', 'B', 'C'};
@@ -38,7 +38,7 @@ void Processor::GenList() {
             if (building == 'B' && storey == 0) { continue; }
             if (building == 'C' && (storey == 0 || storey == 4)) { continue; }
             for (const int & type : types) {
-                cue.items.emplace_back(building, storey, type);
+                CueListSampler.items.emplace_back(building, storey, type);
             }
         }
     }
@@ -48,13 +48,13 @@ bool Processor::Save(const std::string &processFileName) const {
     std::ofstream finProcess;
     finProcess.open(processFileName);
 
-    if (!cue.check()) {
+    if (!CueListSampler.check()) {
         std::cerr << "CueList is empty, check failed." << std::endl;
         return false;
     }
 
-    finProcess << cue.studentCount << std::endl;
-    for (const auto & item : cue.items) {
+    finProcess << CueListSampler.studentCount << std::endl;
+    for (const auto & item : CueListSampler.items) {
         finProcess << item.building << " " << item.storey << " " << item.type;
         finProcess << std::endl;
     }
@@ -62,12 +62,12 @@ bool Processor::Save(const std::string &processFileName) const {
 }
 
 bool Processor::rake() {
-    if (!cue.check()) {
+    if (!CueListSampler.check()) {
         std::cerr << "CueList is empty, check failed." << std::endl;
         return false;
     }
 
-    auto size = cue.items.size();
+    auto size = CueListSampler.items.size();
     long long shifts = static_cast<long long>(1) << size;
     std::vector<const CueItem*> CueItems;
 
@@ -82,7 +82,7 @@ bool Processor::rake() {
         PreProcess(students);
 
         std::vector<Classroom*> classrooms;
-        freeCapacity = PreProcess(classrooms, CueItems);
+        emission = PreProcess(classrooms, CueItems);
 
         Process(students, classrooms);
 
@@ -95,7 +95,7 @@ void Processor::GenCues(std::vector<const CueItem *> &GenItems, int k) const {
     int p = 0;
     GenItems.clear();
     while (k > 0) {
-        if (k % 2 == 1) { GenItems.push_back(&cue.items[p]); }
+        if (k % 2 == 1) { GenItems.push_back(&CueListSampler.items[p]); }
         k >>= 1;
         p++;
     }
@@ -106,19 +106,18 @@ void Processor::PreProcess(std::vector<Student> &students) {
     static std::default_random_engine engine(time(0));
 
     // map the students to desired numbers.
-    if (cue.studentCount > students.size()) {
-        while (cue.studentCount >= students.size() + studentsRef.size())
+    if (CueListSampler.studentCount > students.size()) {
+        while (CueListSampler.studentCount >= students.size() + studentsRef.size())
             students.insert(students.end(), studentsRef.begin(), studentsRef.end());
-        students.insert(students.end(), studentsRef.begin(), studentsRef.begin() + cue.studentCount - students.size());
+        students.insert(students.end(), studentsRef.begin(), studentsRef.begin() + CueListSampler.studentCount - students.size());
     }
 
     // shuffle the student list
     std::shuffle(std::begin(students), std::end(students), engine);
 }
 
-int Processor::PreProcess(std::vector<Classroom *> &classrooms, const std::vector<const CueItem *> &items) {
+double Processor::PreProcess(std::vector<Classroom *> &classrooms, const std::vector<const CueItem *> &items) {
     std::vector<Classroom> &classReference = fp->getClassroom();
-    int freeCapacity = 0;
 
     for (const auto item : items) {
         for (auto & classroom : classReference) {
@@ -128,14 +127,13 @@ int Processor::PreProcess(std::vector<Classroom *> &classrooms, const std::vecto
                 && (item->type == 0
                     || (item->type == 1 && classroom.capacity < 100)
                     || (item->type == 2 && classroom.capacity >= 100))) {
-                freeCapacity += classroom.capacity;
                 classroom.currentC = 0;
                 classroom.currentP = 0;
                 classrooms.push_back(&classroom);
             }
         }
     }
-    return freeCapacity;
+    return AnalyzeTechnique::CalculateEmission(classrooms, items);
 }
 
 void Processor::Process(std::vector<Student> &students, std::vector<Classroom *> &classrooms) {
@@ -205,20 +203,19 @@ void Processor::Analyze(std::vector<Student> &students) {
     stdDeviation /= students.size();
     stdDeviation = sqrt(stdDeviation);
 
-    sampler.emplace_back(SFTotal, average, SFTotal / freeCapacity);
+    sampler.emplace_back(SFTotal, emission, SFTotal / emission);
 }
 
-bool Processor::output(const std::string &outputFileName) {
+bool Processor::output(const std::string &outputFileName, const Config &config) {
     std::ofstream fout(outputFileName);
     if (fout.fail()) {
         std::cerr << "Fail to open student data file." << std::endl;
         return false;
     }
 
-//    auto engine = std::default_random_engine{};
-//    std::shuffle(std::begin(sampler), std::end(sampler), engine);
     for (const auto &s : sampler) {
-        fout << s.SFTotal << " " << s.average << " " << s.value << std::endl;
+        if (s.emission > config.MaxEmission) { continue; }
+        fout << s.SFTotal << " " << s.emission << " " << s.value << std::endl;
     }
     return true;
 }

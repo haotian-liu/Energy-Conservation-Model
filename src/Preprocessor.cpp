@@ -49,10 +49,10 @@ bool Preprocessor::LoadStudent() {
         feel = 0;
         for (int i = 0; i < 5; i++) {
             finStudent >> t;
-            if (t) feel++;
+            if (t) { feel++; }
         }
         finStudent >> t;
-        if (t) feel = 0;
+        if (t) { feel = 0; }
         student.stuEffect = feel;
 
         finStudent >> t1 >> t2 >> t3;
@@ -82,9 +82,8 @@ bool Preprocessor::LoadClassroom() {
     Classroom classroom;
     while (!finClass.eof()) {
         finClass >> classroom.id >> classroom.capacity >> classroom.plug;
-        classroom.part = classroom.id[0] - 'A';
-        classroom.storey = classroom.id[1] - '0';
-        classroom.currentC = classroom.currentP = 0;
+        finClass >> classroom.walts >> classroom.lightEmission >> classroom.airEmission >> classroom.combEmission;
+        classroom.initialize();
         classrooms.push_back(classroom);
     }
     return true;
