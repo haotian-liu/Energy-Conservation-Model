@@ -30,11 +30,11 @@ void Processor::GenList() {
     std::vector<int> storeys = {0, 1, 2, 3, 4};
     std::vector<int> types = {0};
     // type (0,1,2) => (any, small, large)
-    for (const char & building : buildings) {
-        for (const int & storey : storeys) {
+    for (const char &building : buildings) {
+        for (const int &storey : storeys) {
             if (building == 'B' && storey == 0) { continue; }
             if (building == 'C' && (storey == 0 || storey == 4)) { continue; }
-            for (const int & type : types) {
+            for (const int &type : types) {
                 CueListSampler.items.emplace_back(building, storey, type);
             }
         }
@@ -51,7 +51,7 @@ bool Processor::Save(const std::string &processFileName) const {
     }
 
     finProcess << CueListSampler.studentCount << std::endl;
-    for (const auto & item : CueListSampler.items) {
+    for (const auto &item : CueListSampler.items) {
         finProcess << item.building << " " << item.storey << " " << item.type;
         finProcess << std::endl;
     }
@@ -66,7 +66,7 @@ bool Processor::rake() {
 
     auto size = CueListSampler.items.size();
     long long shifts = static_cast<long long>(1) << size;
-    std::vector<const CueItem*> CueItems;
+    std::vector<const CueItem *> CueItems;
 
     for (int i = 0; i < shifts; i++) {
         SFTotal = 0;
@@ -76,7 +76,7 @@ bool Processor::rake() {
         auto students = fp->getStudents();
         PreProcess(students);
 
-        std::vector<Classroom*> classrooms;
+        std::vector<Classroom *> classrooms;
         emission = PreProcess(classrooms, CueItems);
 
         Process(students, classrooms);
@@ -115,7 +115,7 @@ double Processor::PreProcess(std::vector<Classroom *> &classrooms, const std::ve
     std::vector<Classroom> &classReference = fp->getClassroom();
 
     for (const auto item : items) {
-        for (auto & classroom : classReference) {
+        for (auto &classroom : classReference) {
             // type (0,1,2) => (any, small, large)
             if ((classroom.id[0] == item->building)
                 && (classroom.storey == item->storey || item->storey == -1)
@@ -133,21 +133,22 @@ double Processor::PreProcess(std::vector<Classroom *> &classrooms, const std::ve
 
 void Processor::Process(std::vector<Student> &students, std::vector<Classroom *> &classrooms) {
     static std::map<std::string, decltype(*&AnalyzeTechnique::CheckDummy)> TechniqueMap = {
-            {"CheckCapacity", AnalyzeTechnique::CheckCapacity},
-            {"CheckPart", AnalyzeTechnique::CheckPart},
-            {"CheckPlug", AnalyzeTechnique::CheckPlug},
-            {"CheckStorey", AnalyzeTechnique::CheckStorey},
+//            {"CheckCapacity",     AnalyzeTechnique::CheckCapacity},
+//            {"CheckPart",         AnalyzeTechnique::CheckPart},
+//            {"CheckPlug",         AnalyzeTechnique::CheckPlug},
+//            {"CheckStorey",       AnalyzeTechnique::CheckStorey},
+            {"CheckDensityPlugs", AnalyzeTechnique::CheckDensityPlugs},
+            {"CheckStoreyPart",   AnalyzeTechnique::CheckStoreyPart},
     };
 
     Classroom *bestClassroom;
 
     double currentSF, bestSF;
-    int probability;
 
     for (auto &student : students) {
         bestSF = 0;
         bestClassroom = nullptr;
-        for (auto &classroom : classrooms) {
+        for (const auto &classroom : classrooms) {
             currentSF = 1;
 
             if (classroom->capacity <= classroom->currentC) { continue; }
@@ -166,15 +167,11 @@ void Processor::Process(std::vector<Student> &students, std::vector<Classroom *>
 
         // check if best found and manipulate data.
         if (bestClassroom != nullptr) {
-            if (student.plug <= 3 && student.plug >= 1 && bestClassroom->currentP < bestClassroom->plug) {
-                probability = std::rand() % 3 + 1;
-                if (student.plug > probability) {
-                    student.isPlugged = true;
-                    bestClassroom->currentP++;
-                }
-            }
             student.satisfactory = bestSF;
             student.inClassroom = bestClassroom->id;
+            if (student.plug != 5 && bestClassroom->currentP != bestClassroom->plug) {
+                bestClassroom->currentP++;
+            }
             bestClassroom->currentC++;
             SFTotal += bestSF;
         }

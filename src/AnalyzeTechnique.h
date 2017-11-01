@@ -31,6 +31,8 @@ public:
     static double CheckPlug(const Student &student, const Classroom &classroom);
     static double CheckCapacity(const Student &student, const Classroom &classroom);
     static double CheckPart(const Student &student, const Classroom &classroom);
+    static double CheckDensityPlugs(const Student &student, const Classroom &classroom);
+    static double CheckStoreyPart(const Student &student, const Classroom &classroom);
     static double CalculateEmission(const std::vector<Classroom*> &classrooms, const std::vector<const CueItem *> &CueList);
 };
 

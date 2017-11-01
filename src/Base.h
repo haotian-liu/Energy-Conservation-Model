@@ -11,18 +11,25 @@
 #include <vector>
 
 struct Student {
-    void fixPrefer() {
-        if (preferA == -2) { preferA = 3; }
-        if (preferB == -2) { preferB = 3; }
-        if (preferC == -2) { preferC = 3; }
+    double storeyPrefer(int storey) const {
+        switch (this->storey) {
+            case 1:
+                return storey + 1;
+            case 2:
+                return 5 - storey;
+            case 3:
+                if (storey == 3) { return 5; }
+                if (storey == 2 || storey == 4) { return 3; }
+                return 1;
+            case 4:
+            default:
+                return 3;
+        }
     }
-    int grade, gender;
-    int storey, plug, capacity;
-    int stuEffect;
-    int preferA, preferB, preferC; // preference of different parts of buildings like A, B, and C.
-    int generic;
+    int grade, gender, storey, plug;
+    int prefer[3]; // preference of different parts of buildings like A, B, and C.
+    double capacity;
     double satisfactory;
-    std::string classroom;
     std::string inClassroom;
     bool isPlugged;
 };
@@ -37,6 +44,9 @@ struct Classroom {
         part = id[0] - 'A';
         storey = id[1] - '0';
         currentC = currentP = 0;
+    }
+    double currentCapacity() const {
+        return currentC * 1.0 / capacity;
     }
     std::string id;
     int storey, plug, capacity, part;

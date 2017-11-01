@@ -6,6 +6,20 @@
 #include <cmath>
 #include <iostream>
 
+double AnalyzeTechnique::CheckDensityPlugs(const Student &student, const Classroom &classroom) {
+    double x1 = classroom.currentCapacity() - student.capacity; // density_x1
+    double x2 = (5 - student.plug) * (classroom.plug - classroom.currentP); // plug_x2;
+
+    return (-5.98044794606417 * x1) + (-0.640442727008415 * x2);
+}
+
+double AnalyzeTechnique::CheckStoreyPart(const Student &student, const Classroom &classroom) {
+    double x1 = 4 - student.prefer[classroom.part]; // part
+    double x2 = student.storeyPrefer(classroom.storey); // storey
+
+    return (0.346497722079504 * x1) + (0.396068718135752 * x2);
+}
+
 double AnalyzeTechnique::CheckStorey(const Student &student, const Classroom &classroom) {
     switch (student.storey) {
         case 1:
@@ -36,27 +50,27 @@ double AnalyzeTechnique::CheckPlug(const Student &student, const Classroom &clas
 }
 
 double AnalyzeTechnique::CheckCapacity(const Student &student, const Classroom &classroom) {
-    if (classroom.currentC > student.capacity) {
-        return pow(0.8, student.stuEffect * getMax(0, classroom.currentC - student.capacity));
-    }
+//    if (classroom.currentC > student.capacity) {
+//        return pow(0.8, student.stuEffect * getMax(0, classroom.currentC - student.capacity));
+//    }
     return 1.f;
 }
 
 double AnalyzeTechnique::CheckPart(const Student &student, const Classroom &classroom) {
-    int stuPart;
-    switch (classroom.part) {
-        case 1:
-            stuPart = student.preferB;
-            break;
-        case 2:
-            stuPart = student.preferC;
-            break;
-        default:
-            stuPart = student.preferA;
-            break;
-    }
-
-    return (0.6 + (3 - stuPart) * 0.2);
+//    int stuPart;
+//    switch (classroom.part) {
+//        case 1:
+//            stuPart = student.preferB;
+//            break;
+//        case 2:
+//            stuPart = student.preferC;
+//            break;
+//        default:
+//            stuPart = student.preferA;
+//            break;
+//    }
+//
+//    return (0.6 + (3 - stuPart) * 0.2);
 }
 
 double AnalyzeTechnique::CalculateEmission(const std::vector<Classroom *> &classrooms, const std::vector<const CueItem *> &CueList) {

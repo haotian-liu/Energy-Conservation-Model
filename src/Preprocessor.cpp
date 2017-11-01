@@ -41,29 +41,13 @@ bool Preprocessor::Load() {
 
 bool Preprocessor::LoadStudent() {
     Student student;
-    int t, feel;
+    int currentCapacity, preferedCapacity, capacity;
 
     while (!finStudent.eof()) {
         finStudent >> student.grade >> student.gender >> student.storey >> student.plug;
-        feel = 0;
-        for (int i = 0; i < 5; i++) {
-            finStudent >> t;
-            if (t != 0) { feel++; }
-        }
-        finStudent >> t;
-        if (t != 0) { feel = 0; }
-        student.stuEffect = feel;
-
-        finStudent >> student.preferA >> student.preferB >> student.preferC;
-        student.fixPrefer();
-
-        finStudent >> student.generic;
-        finStudent >> t >> student.capacity; // jump
-
-        if (student.capacity < 0) { student.capacity = MaxToleranceCapacity; }
-
-        finStudent >> student.classroom;
-        finStudent >> t; // skip unknown
+        finStudent >> student.prefer[0] >> student.prefer[1] >> student.prefer[2];
+        finStudent >> currentCapacity >> preferedCapacity >> capacity;
+        student.capacity = static_cast<double>(preferedCapacity) / capacity;
 
         students.push_back(student);
     }
